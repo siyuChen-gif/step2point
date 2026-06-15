@@ -182,7 +182,7 @@ class HDBSCANClustering(CompressionAlgorithm):
                     raise ValueError(
                         f"{name} is outside the contained subdetector"
                     )
-        for isub, subdetector in enumerate(uinique_subdetectors):
+        for isub, subdetector in enumerate(unique_subdetectors):
             if subdetector < 0:
                 raise ValueError(
                     f"Subdetector index {subdetector} is outside the available cell_id encodings "
@@ -223,7 +223,7 @@ class HDBSCANClustering(CompressionAlgorithm):
                     raise ValueError(
                         f"{name} is outside the contained subdetector"
                     )
-        for isub, subdetector in enumerate(uinique_subdetectors):
+        for isub, subdetector in enumerate(unique_subdetectors):
             if subdetector < 0:
                 raise ValueError(
                     f"Subdetector index {subdetector} is outside the available cell_id encodings "
