@@ -43,6 +43,10 @@ class Step2PointHDF5Reader(ShowerReader):
                     }
             step = h5["steps"]
             subdetector = np.asarray(steps["subdetector"], dtype=np.uint8)
+            subdetector_names = [
+                x.decode("utf-8") if isinstance(x, bytes) else str(x)
+                for x in h5["metadata"]["subdetector_names"][:]
+            ]
 
             file_metadata = {"source": "hdf5"}
             if "algorithm" in h5.attrs:
@@ -56,6 +60,7 @@ class Step2PointHDF5Reader(ShowerReader):
                 if cluster_label is not None:
                     metadata["cluster_label"] = cluster_label[mask]
                 metadata["subdetector"] = subdetector[mask]
+                metadata["subdetector_names"] = subdetector_names
                 yield Shower(
                     shower_id=int(shower_id),
                     x=position[mask, 0],
