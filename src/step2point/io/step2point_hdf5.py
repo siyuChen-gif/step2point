@@ -42,13 +42,13 @@ class Step2PointHDF5Reader(ShowerReader):
                         "momentum": tuple(map(float, p_mom[i])),
                     }
             step = h5["steps"]
+            subdetector = np.asarray(steps["subdetector"], dtype=np.uint8)
 
             file_metadata = {"source": "hdf5"}
             if "algorithm" in h5.attrs:
                 file_metadata["algorithm"] = str(h5.attrs["algorithm"])
             if "debug_output" in h5.attrs:
                 file_metadata["debug_output"] = bool(h5.attrs["debug_output"])
-            file_metadata["subdetector"] = np.asarray(steps["subdetector"], dtype=np.uint8)
 
             for shower_id in unique_ids:
                 mask = event_ids == shower_id
