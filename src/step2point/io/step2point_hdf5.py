@@ -41,20 +41,21 @@ class Step2PointHDF5Reader(ShowerReader):
                         "vertex": tuple(map(float, p_vertex[i])),
                         "momentum": tuple(map(float, p_mom[i])),
                     }
+            step = h5["steps"]
 
             file_metadata = {"source": "hdf5"}
             if "algorithm" in h5.attrs:
                 file_metadata["algorithm"] = str(h5.attrs["algorithm"])
             if "debug_output" in h5.attrs:
                 file_metadata["debug_output"] = bool(h5.attrs["debug_output"])
-            if "subdetector" in h5.attrs:
-                file_metadata["subdetector"] = np.asarray(h5.attrs["subdetector"], dtype=np.uint8)
+            file_metadata["subdetector"] = np.asarray(steps["subdetector"], dtype=np.uint8)
 
             for shower_id in unique_ids:
                 mask = event_ids == shower_id
                 metadata = dict(file_metadata)
                 if cluster_label is not None:
                     metadata["cluster_label"] = cluster_label[mask]
+                metadata["subdetector"] = subdetector[mask]
                 yield Shower(
                     shower_id=int(shower_id),
                     x=position[mask, 0],
