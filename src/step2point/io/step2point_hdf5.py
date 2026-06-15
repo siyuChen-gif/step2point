@@ -47,6 +47,8 @@ class Step2PointHDF5Reader(ShowerReader):
                 file_metadata["algorithm"] = str(h5.attrs["algorithm"])
             if "debug_output" in h5.attrs:
                 file_metadata["debug_output"] = bool(h5.attrs["debug_output"])
+            if "subdetector" in h5.attrs:
+                file_metadata["subdetector"] = np.asarray(h5.attrs["subdetector"], dtype=np.uint8)
 
             for shower_id in unique_ids:
                 mask = event_ids == shower_id
