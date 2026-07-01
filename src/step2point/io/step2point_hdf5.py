@@ -46,10 +46,13 @@ class Step2PointHDF5Reader(ShowerReader):
                 subdetector = np.asarray(steps["subdetector"], dtype=np.uint8)
             else:
                 subdetector = np.zeros(len(steps["energy"]), dtype=np.uint8)
-            subdetector_names = [
-                x.decode("utf-8") if isinstance(x, bytes) else str(x)
-                for x in h5["metadata"]["subdetector_names"][:]
-            ]
+                
+            subdetector_names = []
+            if "metadata" in h5 and "subdetector_names" in h5["metadata"]:
+                subdetector_names = [
+                    x.decode("utf-8") if isinstance(x, bytes) else str(x)
+                    for x in h5["metadata"]["subdetector_names"][:]
+                ]
 
             file_metadata = {"source": "hdf5"}
             if "algorithm" in h5.attrs:
