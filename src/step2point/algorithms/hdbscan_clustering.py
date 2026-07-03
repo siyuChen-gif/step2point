@@ -175,6 +175,7 @@ class HDBSCANClustering(CompressionAlgorithm):
         decoded = np.empty(cell_ids.shape[0], dtype=np.int64)
         unique_subdetectors = np.unique(subdetectors)
         subdetector_names = shower.metadata.get("subdetector_names")
+        print(subdetector_names, type(subdetector_names))
         MAP = {isub: name for isub, name in enumerate(subdetector_names)}
         # checks
         if self.collection_name:
