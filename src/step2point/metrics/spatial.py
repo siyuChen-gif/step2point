@@ -57,7 +57,7 @@ def estimate_shower_axis(
     weights = np.asarray(shower.E, dtype=np.float64)
 
     # DEBUG ############################################
-    print("\n[DEBUG axis] event:", event_id)
+    print("\n[DEBUG axis] event:", shower.shower_id)
     print("  n_hits:", len(coords))
     print("  weights sum:", np.sum(weights))
     print("  finite coords:", np.all(np.isfinite(coords)))
