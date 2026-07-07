@@ -121,6 +121,7 @@ class HDBSCANClustering(CompressionAlgorithm):
         self.outlier_policy = outlier_policy
         self.merge_scope = merge_scope
         self.collection_name = collection_name
+        self.subdetector_names = shower.metadata.get("subdetector_names", [])
         self.algorithm = algorithm
         self.n_jobs = n_jobs
         valid_merge_scopes = {"none", "layer", "system_layer", "cell_id", "cell_id_neighbour"}
@@ -174,19 +175,19 @@ class HDBSCANClustering(CompressionAlgorithm):
         subdetectors = np.asarray(subdetectors, dtype=np.int64)
         decoded = np.empty(cell_ids.shape[0], dtype=np.int64)
         unique_subdetectors = np.unique(subdetectors)
-        subdetector_names = shower.metadata.get("subdetector_names", [])
-        MAP = {isub: name for isub, name in enumerate(subdetector_names)}
+        MAP = {isub: name for isub, name in enumerate(self.subdetector_names)}
         # checks
         if self.collection_name:
             for name in self.collection_name:
-                if name not in subdetector_names:
+                if name not in self.subdetector_names:
                     raise ValueError(
                         f"{name} is outside the contained subdetector"
                     )
         for isub, subdetector in enumerate(unique_subdetectors):
-            if subdetector < 0:
+            if subdetector < 0 or subdetector >= len(self.subdetector_names):
                 raise ValueError(
                     f"Subdetector index {subdetector} is outside the available cell_id encodings "
+                    f"(n={len(self.subdetector_names)})."
                 )
             mask = subdetectors == subdetector
             if self.collection_name is not None:
@@ -217,20 +218,20 @@ class HDBSCANClustering(CompressionAlgorithm):
         subdetectors = np.asarray(subdetectors, dtype=np.int64)
         decoded = np.empty(cell_ids.shape[0], dtype=np.int64)
         unique_subdetectors = np.unique(subdetectors)
-        subdetector_names = shower.metadata.get("subdetector_names", [])
-        MAP = {isub: name for isub, name in enumerate(subdetector_names)}
+        MAP = {isub: name for isub, name in enumerate(self.subdetector_names)}
         # checks
         if self.collection_name:
             for name in self.collection_name:
-                if name not in subdetector_names:
+                if name not in self.subdetector_names:
                     raise ValueError(
                         f"{name} is outside the contained subdetector"
                     )
-        for isub, subdetector in enumerate(unique_subdetectors):
-            if subdetector < 0:
-                raise ValueError(
-                    f"Subdetector index {subdetector} is outside the available cell_id encodings "
-                )
+            for isub, subdetector in enumerate(unique_subdetectors):
+                if subdetector < 0 or subdetector >= len(self.subdetector_names):
+                    raise ValueError(
+                        f"Subdetector index {subdetector} is outside the available cell_id encodings "
+                        f"(n={len(self.subdetector_names)})."
+                    )
             if self.collection_name is not None:
                 isub = self.collection_name.index(MAP[subdetector])
             encoding = self.cell_id_encoding[int(isub)]
