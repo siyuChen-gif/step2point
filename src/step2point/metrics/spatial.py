@@ -108,7 +108,7 @@ def longitudinal_radial_phi(
 
     # DEBUG ############################################
     print("\n[DEBUG shower]")
-    print("event:", event_id)
+    print("event:", shower.shower_id)
     print("len:", len(shower.x))
     # DEBUG ############################################
 
