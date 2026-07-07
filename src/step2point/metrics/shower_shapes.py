@@ -15,7 +15,7 @@ def weighted_moment(values, weights, order: int) -> float:
 
 
 def shower_moments(shower):
-    long, radial, _ = longitudinal_radial_phi(shower)
+    long, radial, _ = longitudinal_radial_phi(shower, axis_override=np.array([0,1,0]))
     w = shower.E
     return {
         "longitudinal_m1": weighted_moment(long, w, 1),
