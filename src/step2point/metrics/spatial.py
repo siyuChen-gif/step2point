@@ -55,6 +55,15 @@ def estimate_shower_axis(
     """
     coords = np.stack([shower.x, shower.y, shower.z], axis=1)
     weights = np.asarray(shower.E, dtype=np.float64)
+
+    # DEBUG ############################################
+    print("\n[DEBUG axis] event:", event_id)
+    print("  n_hits:", len(coords))
+    print("  weights sum:", np.sum(weights))
+    print("  finite coords:", np.all(np.isfinite(coords)))
+    print("  finite weights:", np.all(np.isfinite(weights)))
+    # DEBUG ############################################
+
     centroid = np.average(coords, axis=0, weights=weights)
     if axis_override is not None:
         return centroid, _normalized_axis(axis_override)
@@ -96,6 +105,13 @@ def longitudinal_radial_phi(
     `estimate_shower_axis`, which means PCA is the default and
     `axis_override` is optional.
     """
+
+    # DEBUG ############################################
+    print("\n[DEBUG shower]")
+    print("event:", event_id)
+    print("len:", len(shower.x))
+    # DEBUG ############################################
+
     if centroid is None or axis is None:
         centroid, axis = estimate_shower_axis(shower, axis_override=axis_override)
     else:
