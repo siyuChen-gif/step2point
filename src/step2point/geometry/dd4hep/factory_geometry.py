@@ -173,6 +173,11 @@ class DD4hepResolver:
                 name = const.attrib.get("name")
                 expr = const.attrib.get("value")
                 if name and expr:
+                    expr = expr.strip()
+                    # DD4hep ID encoding string
+                    if ":" in expr and "," in expr:
+                        constants[name] = expr
+                        continue
                     pending[name] = expr
 
 
