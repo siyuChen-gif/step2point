@@ -167,6 +167,7 @@ class DD4hepResolver:
         ### Iteratively load constants
         
         pending = {}
+        constants = {}
 
         for root in self._roots.values():
             for const in root.iter("constant"):
@@ -176,12 +177,10 @@ class DD4hepResolver:
                     expr = expr.strip()
                     # DD4hep ID encoding string
                     if ":" in expr and "," in expr:
-                        const[name] = expr
+                        constants[name] = expr
                         continue
                     pending[name] = expr
 
-
-        constants = {}
         pending = pending.copy()
 
         while pending:
