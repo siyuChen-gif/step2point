@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
+import math
 
 _BIN_OPS = {
     ast.Add: operator.add,
@@ -32,10 +33,19 @@ _UNITS = {
     "tesla": 1.0,
     "deg": np.pi / 180.0,
     "rad": 1.0,
+    "mrad": 1e-3,
+}
+
+_FUNCTIONS = {
+    "sin": math.sin,
+    "cos": math.cos,
+    "tan": math.tan,
+    "sqrt": math.sqrt,
 }
 
 
 def _eval_expr(expr: str, names: dict[str, float]) -> float:
+    expr = expr.strip()
     node = ast.parse(expr, mode="eval")
 
     def _visit(current: ast.AST) -> float:
@@ -49,6 +59,16 @@ def _eval_expr(expr: str, names: dict[str, float]) -> float:
             if current.id in _UNITS:
                 return _UNITS[current.id]
             raise KeyError(current.id)
+        if isinstance(current, ast.Call):
+            if (
+                isinstance(current.func, ast.Name)
+                and current.func.id in _FUNCTIONS
+                and len(current.args) == 1
+            ):
+                return _FUNCTIONS[current.func.id](
+                    _visit(current.args[0])
+                )
+            raise ValueError(f"Unsupported function: {ast.dump(current)}")
         if isinstance(current, ast.BinOp) and type(current.op) in _BIN_OPS:
             return _BIN_OPS[type(current.op)](_visit(current.left), _visit(current.right))
         if isinstance(current, ast.UnaryOp) and type(current.op) in _UNARY_OPS:
