@@ -114,6 +114,7 @@ class BarrelLayerGeometry:
 class BarrelLayout:
     collection_name: str
     detector_name: str
+    det_id: Optional[int]
     readout_xml_path: str
     detector_xml_path: str
     segmentation_type: str
