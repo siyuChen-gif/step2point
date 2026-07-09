@@ -176,7 +176,7 @@ class DD4hepResolver:
                     expr = expr.strip()
                     # DD4hep ID encoding string
                     if ":" in expr and "," in expr:
-                        constants[name] = expr
+                        const[name] = expr
                         continue
                     pending[name] = expr
 
