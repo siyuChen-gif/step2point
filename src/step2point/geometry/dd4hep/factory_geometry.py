@@ -293,11 +293,15 @@ def build_barrel_layout_from_collection(main_xml: str | Path, collection_name: s
     det_id_str = detector.get("id")
     det_id = int(resolver.constants[det_id_str])
 
-    supported_detectors = {'ODDPolyhedraBarrelCalorimeter', 'DD4hep_PolyhedraBarrelCalorimeter2'}
+    supported_detectors = {
+        'ODDPolyhedraBarrelCalorimeter',
+        'DD4hep_PolyhedraBarrelCalorimeter2',
+        'GenericCalBarrel_o1_v01',
+    }
 
     if detector.attrib.get("type") not in supported_detectors:
         raise NotImplementedError(
-            f"Only ODDPolyhedraBarrelCalorimeter or DD4hep_PolyhedraBarrelCalorimeter2" 
+            f"Only ODDPolyhedraBarrelCalorimeter or DD4hep_PolyhedraBarrelCalorimeter2 or GenericCalBarrel_o1_v01"
             f"is implemented in this prototype, got {detector.attrib.get('type')!r}"
         )
 
