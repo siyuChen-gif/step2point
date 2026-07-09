@@ -370,6 +370,7 @@ def build_barrel_layout_from_collection(main_xml: str | Path, collection_name: s
     return BarrelLayout(
         collection_name=collection_name,
         detector_name=detector.attrib["name"],
+        det_id = det_id,
         readout_xml_path=str(readout_ref.path),
         detector_xml_path=str(detector_ref.path),
         segmentation_type=seg.attrib["type"],
