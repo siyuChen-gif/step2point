@@ -41,6 +41,8 @@ _FUNCTIONS = {
     "cos": math.cos,
     "tan": math.tan,
     "sqrt": math.sqrt,
+    "floor": math.floor,
+    "ceil": math.ceil,
 }
 
 
@@ -216,6 +218,8 @@ class DD4hepResolver:
 
 ### Subsitute expresions for variable resolution in xml
 def normalize(expr):
+    expr = expr.strip()
+    expr = re.sub(r"\(int\)\s*", "", expr)
     expr = expr.replace("^", "**")
     expr = re.sub(r"(\d)\s+(\d)", r"\1*\2", expr)
     return expr
