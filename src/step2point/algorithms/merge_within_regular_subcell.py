@@ -171,6 +171,13 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
                 systems = np.asarray([item["system"] for item in decoded], dtype=np.int32)
                 modules = np.asarray([item["module"] for item in decoded], dtype=np.int32)
                 layers = np.asarray([item["layer"] for item in decoded], dtype=np.int32)
+
+                print(
+                    "raw decoded layers:",
+                    np.unique([item["layer"] for item in decoded])[:20]
+                )
+
+                
                 cell_x = np.asarray([item["x"] for item in decoded], dtype=np.int32)
                 cell_y = np.asarray([item["y"] for item in decoded], dtype=np.int32)
 
