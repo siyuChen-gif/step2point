@@ -325,6 +325,12 @@ def build_barrel_layout_from_collection(main_xml: str | Path, collection_name: s
     gap = _eval_expr(detector.attrib.get("gap", "0"), resolver.constants)
 
     specs = _layer_specs(detector, resolver.constants)
+
+    print("Detector:", detector.attrib["name"])
+    print("Number of layer specs:", len(specs))
+    for s in specs:
+        print(s)
+
     total_thickness = sum(spec.repeat * spec.thickness_mm for spec in specs)
 
     inner_angle = 2.0 * np.pi / numsides
