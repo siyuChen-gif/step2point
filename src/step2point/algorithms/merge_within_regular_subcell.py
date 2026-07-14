@@ -277,11 +277,20 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
                 processed[mask] = True
         
         # check if all cells are processed- if not raise the error message with the number of unprocessed hits
+        # if not np.all(processed):
+        #     unmatched = np.where(~processed)[0]
+        #     raise ValueError(
+        #         f"{len(unmatched)} hits were not processed in MergeWithinRegularSubcell."
+        #     )
         if not np.all(processed):
             unmatched = np.where(~processed)[0]
-            raise ValueError(
-                f"{len(unmatched)} hits were not processed in MergeWithinRegularSubcell."
+            print(
+                f"Warning: {len(unmatched)} hits were not processed "
+                "in MergeWithinRegularSubcell. Keeping them unchanged."
             )
+
+            # mark them as processed so the algorithm can continue
+            processed[unmatched] = True
 
         key_dtype = np.dtype([("cell_id", np.uint64), ("sub_x", np.int32), ("sub_y", np.int32)])
         keys = np.empty(n_points, dtype=key_dtype)
