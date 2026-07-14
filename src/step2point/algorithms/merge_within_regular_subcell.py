@@ -275,6 +275,37 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
             center_z[unmatched] = shower.z[unmatched]
 
             processed[unmatched] = True
+        
+        bad_center = ~(
+        np.isfinite(center_x)
+        & np.isfinite(center_y)
+        & np.isfinite(center_z)
+    )
+
+    if np.any(bad_center):
+        print("BAD center before clustering")
+        idxs = np.where(bad_center)[0]
+
+        for idx in idxs[:10]:
+            print(
+                "idx:",
+                idx,
+                "cell:",
+                shower.cell_id[idx],
+                "E:",
+                shower.E[idx],
+                "processed:",
+                processed[idx],
+                "x:",
+                center_x[idx],
+                "y:",
+                center_y[idx],
+                "z:",
+                center_z[idx],
+            )
+
+        raise RuntimeError("center arrays contain NaN")
+        
 
         key_dtype = np.dtype([("cell_id", np.uint64), ("sub_x", np.int32), ("sub_y", np.int32)])
         keys = np.empty(n_points, dtype=key_dtype)
@@ -295,34 +326,6 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
             for point_index, group_index in enumerate(inverse):
                 if first_indices[group_index] < 0:
                     first_indices[group_index] = point_index
-                
-            bad_center = np.where(
-                ~(
-                    np.isfinite(center_x[first_indices])
-                    &
-                    np.isfinite(center_y[first_indices])
-                    &
-                    np.isfinite(center_z[first_indices])
-                )
-            )[0]
-
-            if len(bad_center):
-                print("Bad center output:")
-                for i in bad_center[:10]:
-                    idx = first_indices[i]
-                    print(
-                        "output cluster:",
-                        i,
-                        "original index:",
-                        idx,
-                        "cell_id:",
-                        shower.cell_id[idx],
-                        "center:",
-                        center_x[idx],
-                        center_y[idx],
-                        center_z[idx],
-                    )
-            
             x_out = center_x[first_indices]
             y_out = center_y[first_indices]
             z_out = center_z[first_indices]
