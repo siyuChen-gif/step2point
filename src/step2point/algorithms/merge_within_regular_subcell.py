@@ -170,14 +170,13 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
                 decoded = [decode_dd4hep_cell_id(int(cell_id), self.layout[coll_idx].cell_id_encoding) for cell_id in shower.cell_id]
                 systems = np.asarray([item["system"] for item in decoded], dtype=np.int32)
                 modules = np.asarray([item["module"] for item in decoded], dtype=np.int32)
-                layers = np.asarray([item["layer"] for item in decoded], dtype=np.int32)
 
                 print(
                     "raw decoded layers:",
                     np.unique([item["layer"] for item in decoded])[:20]
                 )
 
-
+                layers = np.asarray([item["layer"] for item in decoded], dtype=np.int32)
                 cell_x = np.asarray([item["x"] for item in decoded], dtype=np.int32)
                 cell_y = np.asarray([item["y"] for item in decoded], dtype=np.int32)
 
