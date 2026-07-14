@@ -277,35 +277,35 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
             processed[unmatched] = True
         
         bad_center = ~(
-        np.isfinite(center_x)
-        & np.isfinite(center_y)
-        & np.isfinite(center_z)
-    )
+            np.isfinite(center_x)
+            & np.isfinite(center_y)
+            & np.isfinite(center_z)
+        )
 
-    if np.any(bad_center):
-        print("BAD center before clustering")
-        idxs = np.where(bad_center)[0]
+        if np.any(bad_center):
+            print("BAD center before clustering")
+            idxs = np.where(bad_center)[0]
 
-        for idx in idxs[:10]:
-            print(
-                "idx:",
-                idx,
-                "cell:",
-                shower.cell_id[idx],
-                "E:",
-                shower.E[idx],
-                "processed:",
-                processed[idx],
-                "x:",
-                center_x[idx],
-                "y:",
-                center_y[idx],
-                "z:",
-                center_z[idx],
-            )
+            for idx in idxs[:10]:
+                print(
+                    "idx:",
+                    idx,
+                    "cell:",
+                    shower.cell_id[idx],
+                    "E:",
+                    shower.E[idx],
+                    "processed:",
+                    processed[idx],
+                    "x:",
+                    center_x[idx],
+                    "y:",
+                    center_y[idx],
+                    "z:",
+                    center_z[idx],
+                )
 
-        raise RuntimeError("center arrays contain NaN")
-        
+            raise RuntimeError("center arrays contain NaN")
+
 
         key_dtype = np.dtype([("cell_id", np.uint64), ("sub_x", np.int32), ("sub_y", np.int32)])
         keys = np.empty(n_points, dtype=key_dtype)
