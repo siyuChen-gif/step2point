@@ -170,12 +170,6 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
                 decoded = [decode_dd4hep_cell_id(int(cell_id), self.layout[coll_idx].cell_id_encoding) for cell_id in shower.cell_id]
                 systems = np.asarray([item["system"] for item in decoded], dtype=np.int32)
                 modules = np.asarray([item["module"] for item in decoded], dtype=np.int32)
-
-                print(
-                    "raw decoded layers:",
-                    np.unique([item["layer"] for item in decoded])[:20]
-                )
-
                 layers = np.asarray([item["layer"] for item in decoded], dtype=np.int32)
                 cell_x = np.asarray([item["x"] for item in decoded], dtype=np.int32)
                 cell_y = np.asarray([item["y"] for item in decoded], dtype=np.int32)
@@ -190,6 +184,7 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
                 unique_ml = np.unique(np.stack([systems[system_mask], modules[system_mask], layers[system_mask]], axis=1), axis=0)
                 for system_index, module_index, layer_index in unique_ml:
                     mask = system_mask & (modules == module_index) & (layers == layer_index)
+                    print(layer_index)
                     layer = self.layout[coll_idx].layers[layer_index - 1]
                     sensitive_center_xy = barrel_sensitive_plane_center_xy(self.layout[coll_idx], int(layer_index), int(module_index))
                     _, _, tangent = barrel_module_basis(self.layout[coll_idx], int(layer_index), int(module_index))
