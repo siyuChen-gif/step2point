@@ -179,14 +179,6 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
                     systems == self.layout[coll_idx].det_id
                 ) & (~processed)
 
-                print(
-                    collection,
-                    "det_id:",
-                    self.layout[coll_idx].det_id,
-                    "layers:",
-                    np.unique(layers[system_mask])
-                )
-
                 if not np.any(system_mask):
                     # skip the empty collection
                     continue
@@ -304,32 +296,32 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
                 if first_indices[group_index] < 0:
                     first_indices[group_index] = point_index
                 
-                bad_center = np.where(
-                    ~(
-                        np.isfinite(center_x[first_indices])
-                        &
-                        np.isfinite(center_y[first_indices])
-                        &
-                        np.isfinite(center_z[first_indices])
-                    )
-                )[0]
+            bad_center = np.where(
+                ~(
+                    np.isfinite(center_x[first_indices])
+                    &
+                    np.isfinite(center_y[first_indices])
+                    &
+                    np.isfinite(center_z[first_indices])
+                )
+            )[0]
 
-                if len(bad_center):
-                    print("Bad center output:")
-                    for i in bad_center[:10]:
-                        idx = first_indices[i]
-                        print(
-                            "output cluster:",
-                            i,
-                            "original index:",
-                            idx,
-                            "cell_id:",
-                            shower.cell_id[idx],
-                            "center:",
-                            center_x[idx],
-                            center_y[idx],
-                            center_z[idx],
-                        )
+            if len(bad_center):
+                print("Bad center output:")
+                for i in bad_center[:10]:
+                    idx = first_indices[i]
+                    print(
+                        "output cluster:",
+                        i,
+                        "original index:",
+                        idx,
+                        "cell_id:",
+                        shower.cell_id[idx],
+                        "center:",
+                        center_x[idx],
+                        center_y[idx],
+                        center_z[idx],
+                    )
             
             x_out = center_x[first_indices]
             y_out = center_y[first_indices]
