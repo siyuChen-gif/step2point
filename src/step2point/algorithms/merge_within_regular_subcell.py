@@ -175,7 +175,17 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
                 cell_y = np.asarray([item["y"] for item in decoded], dtype=np.int32)
 
                 ### mask out any cellids that don't belong to the detector corresponding to this collection
-                system_mask = ~processed if coll_idx == 0 else (systems == self.layout[coll_idx].det_id) & (~processed)
+                system_mask = (
+                    systems == self.layout[coll_idx].det_id
+                ) & (~processed)
+
+                print(
+                    collection,
+                    "det_id:",
+                    self.layout[coll_idx].det_id,
+                    "layers:",
+                    np.unique(layers[system_mask])
+                )
 
                 if not np.any(system_mask):
                     # skip the empty collection
