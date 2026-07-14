@@ -193,17 +193,7 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
 
                 unique_ml = np.unique(np.stack([systems[system_mask], modules[system_mask], layers[system_mask]], axis=1), axis=0)
                 for system_index, module_index, layer_index in unique_ml:
-                    mask = system_mask & (modules == module_index) & (layers == layer_index)
-
-                    if layer_index > len(self.layout[coll_idx].layers):
-                        print(
-                            "Layer index out of range:",
-                            "collection =", coll_idx,
-                            "layer_index =", layer_index,
-                            "available layers =", len(self.layout[coll_idx].layers),
-                        )
-                        continue
-                    
+                    mask = system_mask & (modules == module_index) & (layers == layer_index)           
                     layer = self.layout[coll_idx].layers[layer_index - 1]
                     sensitive_center_xy = barrel_sensitive_plane_center_xy(self.layout[coll_idx], int(layer_index), int(module_index))
                     _, _, tangent = barrel_module_basis(self.layout[coll_idx], int(layer_index), int(module_index))
@@ -276,20 +266,22 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
                 center_z[mask] = sub_long_center
                 processed[mask] = True
         
-        # check if all cells are processed- if not raise the error message with the number of unprocessed hits
-        # if not np.all(processed):
-        #     unmatched = np.where(~processed)[0]
-        #     raise ValueError(
-        #         f"{len(unmatched)} hits were not processed in MergeWithinRegularSubcell."
-        #     )
+        # check if all cells are processed- if not raise the error message with the number of unprocessed hits and continue
         if not np.all(processed):
             unmatched = np.where(~processed)[0]
+
             print(
-                f"Warning: {len(unmatched)} hits were not processed "
-                "in MergeWithinRegularSubcell. Keeping them unchanged."
+                f"Warning: {len(unmatched)} hits were not geometrically processed. "
+                "Keeping their original positions."
             )
 
-            # mark them as processed so the algorithm can continue
+            sub_x[unmatched] = 0
+            sub_y[unmatched] = 0
+
+            center_x[unmatched] = shower.x[unmatched]
+            center_y[unmatched] = shower.y[unmatched]
+            center_z[unmatched] = shower.z[unmatched]
+
             processed[unmatched] = True
 
         key_dtype = np.dtype([("cell_id", np.uint64), ("sub_x", np.int32), ("sub_y", np.int32)])
