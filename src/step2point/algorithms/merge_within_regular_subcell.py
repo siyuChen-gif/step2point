@@ -184,7 +184,16 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
                 unique_ml = np.unique(np.stack([systems[system_mask], modules[system_mask], layers[system_mask]], axis=1), axis=0)
                 for system_index, module_index, layer_index in unique_ml:
                     mask = system_mask & (modules == module_index) & (layers == layer_index)
-                    print(layer_index)
+
+                    if layer_index > len(self.layout[coll_idx].layers):
+                        print(
+                            "Layer index out of range:",
+                            "collection =", coll_idx,
+                            "layer_index =", layer_index,
+                            "available layers =", len(self.layout[coll_idx].layers),
+                        )
+                        continue
+                    
                     layer = self.layout[coll_idx].layers[layer_index - 1]
                     sensitive_center_xy = barrel_sensitive_plane_center_xy(self.layout[coll_idx], int(layer_index), int(module_index))
                     _, _, tangent = barrel_module_basis(self.layout[coll_idx], int(layer_index), int(module_index))
