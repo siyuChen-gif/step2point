@@ -178,9 +178,10 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
         if len(self.layout) > 1:
             subdetector_names = shower.metadata.get("subdetector_names", [])
             MAP = {name: isub for isub, name in enumerate(subdetector_names)}
+            subdetectors = np.asarray(subdetectors, dtype=np.int64)
             for coll_idx, collection in enumerate(self.collection_name):
                 subdet_id = MAP[collection]
-                collection_mask = shower.subdetector == subdet_id
+                collection_mask = subdetectors == subdet_id
                 decoded = [
                     decode_dd4hep_cell_id(
                         int(cell_id),
