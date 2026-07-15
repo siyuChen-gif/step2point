@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import ast
+import math
 import operator
 import os
 import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
-import math
 
 _BIN_OPS = {
     ast.Add: operator.add,

@@ -72,8 +72,18 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
             if position_mode is _MISSING:
                 position_mode = ["weighted"] * n_collections
             for idx, collection in enumerate(collection_name):
-                if any(len(x) != len(collection_name) for x in [self._as_list(x_bins), self._as_list(y_bins), self._as_list(position_mode)]):
-                    raise ValueError("Arguments for lists x_bins, y_bins, position_mode, collection_name must be the same length.")
+                if any(
+                    len(x) != len(collection_name)
+                    for x in [
+                        self._as_list(x_bins),
+                        self._as_list(y_bins),
+                        self._as_list(position_mode),
+                    ]
+                ):
+                    raise ValueError(
+                        "Arguments for lists x_bins, y_bins, position_mode, "
+                        "collection_name must be the same length."
+                    )
                 if self._as_list(x_bins)[idx] <= 0 or self._as_list(y_bins)[idx] <= 0:
                     raise ValueError("x_bins and y_bins must be positive integers.")
                 if self._as_list(position_mode)[idx] not in {"weighted", "center"}:
@@ -166,8 +176,18 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
         xy = np.stack([shower.x, shower.y], axis=1).astype(np.float64)
 
         if len(self.layout) > 1:
+            subdetector_names = shower.metadata.get("subdetector_names", [])
+            MAP = {name: isub for isub, name in enumerate(subdetector_names)}
             for coll_idx, collection in enumerate(self.collection_name):
-                decoded = [decode_dd4hep_cell_id(int(cell_id), self.layout[coll_idx].cell_id_encoding) for cell_id in shower.cell_id]
+                subdet_id = MAP[collection]
+                collection_mask = shower.subdetector == subdet_id
+                decoded = [
+                    decode_dd4hep_cell_id(
+                        int(cell_id),
+                        self.layout[coll_idx].cell_id_encoding,
+                    )
+                    for cell_id in shower.cell_id[collection_mask]
+                ]
                 systems = np.asarray([item["system"] for item in decoded], dtype=np.int32)
                 modules = np.asarray([item["module"] for item in decoded], dtype=np.int32)
                 layers = np.asarray([item["layer"] for item in decoded], dtype=np.int32)
@@ -187,7 +207,11 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
                 for system_index, module_index, layer_index in unique_ml:
                     mask = system_mask & (modules == module_index) & (layers == layer_index)           
                     layer = self.layout[coll_idx].layers[layer_index - 1]
-                    sensitive_center_xy = barrel_sensitive_plane_center_xy(self.layout[coll_idx], int(layer_index), int(module_index))
+                    sensitive_center_xy = barrel_sensitive_plane_center_xy(
+                        self.layout[coll_idx],
+                        int(layer_index),
+                        int(module_index),
+                    )
                     _, _, tangent = barrel_module_basis(self.layout[coll_idx], int(layer_index), int(module_index))
 
                     tangent_local = (xy[mask] - sensitive_center_xy) @ tangent
@@ -218,7 +242,11 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
                     center_z[mask] = sub_long_center
                     processed[mask] = True
         else:
-            decoded = [decode_dd4hep_cell_id(int(cell_id), self.layout[0].cell_id_encoding) for cell_id in shower.cell_id]
+            decoded = [
+                decode_dd4hep_cell_id(int(cell_id), 
+                self.layout[0].cell_id_encoding
+                ) for cell_id in shower.cell_id
+            ]
             modules = np.asarray([item["module"] for item in decoded], dtype=np.int32)
             layers = np.asarray([item["layer"] for item in decoded], dtype=np.int32)
             cell_x = np.asarray([item["x"] for item in decoded], dtype=np.int32)
