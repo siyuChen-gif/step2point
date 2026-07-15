@@ -178,6 +178,11 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
         if len(self.layout) > 1:
             subdetector_names = shower.metadata.get("subdetector_names", [])
             MAP = {name: isub for isub, name in enumerate(subdetector_names)}
+            subdetectors = shower.metadata.get("subdetector")
+            if subdetectors is None:
+                raise ValueError(
+                    "Multiple cell_id encodings were provided, but shower.metadata['subdetector'] is absent."
+                )
             subdetectors = np.asarray(subdetectors, dtype=np.int64)
             for coll_idx, collection in enumerate(self.collection_name):
                 subdet_id = MAP[collection]
