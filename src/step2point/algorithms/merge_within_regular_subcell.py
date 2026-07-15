@@ -302,15 +302,6 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
         t_out = None
         if shower.t is not None:
             t_out = np.bincount(inverse, weights=shower.t * shower.E, minlength=n_out) / safe_e
-        
-        # check output for infinite values
-        print(
-            "Before creating output:",
-            "shower_id=", shower.shower_id,
-            "bad x=", np.sum(~np.isfinite(x_out)),
-            "bad y=", np.sum(~np.isfinite(y_out)),
-            "bad z=", np.sum(~np.isfinite(z_out)),
-        )
 
         out = Shower(
             shower_id=shower.shower_id,
