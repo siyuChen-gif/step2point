@@ -276,37 +276,6 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
 
             processed[unmatched] = True
         
-        bad_center = ~(
-            np.isfinite(center_x)
-            & np.isfinite(center_y)
-            & np.isfinite(center_z)
-        )
-
-        if np.any(bad_center):
-            print("BAD center before clustering")
-            idxs = np.where(bad_center)[0]
-
-            for idx in idxs[:10]:
-                print(
-                    "idx:",
-                    idx,
-                    "cell:",
-                    shower.cell_id[idx],
-                    "E:",
-                    shower.E[idx],
-                    "processed:",
-                    processed[idx],
-                    "x:",
-                    center_x[idx],
-                    "y:",
-                    center_y[idx],
-                    "z:",
-                    center_z[idx],
-                )
-
-            raise RuntimeError("center arrays contain NaN")
-
-
         key_dtype = np.dtype([("cell_id", np.uint64), ("sub_x", np.int32), ("sub_y", np.int32)])
         keys = np.empty(n_points, dtype=key_dtype)
         keys["cell_id"] = shower.cell_id
@@ -333,6 +302,15 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
         t_out = None
         if shower.t is not None:
             t_out = np.bincount(inverse, weights=shower.t * shower.E, minlength=n_out) / safe_e
+        
+        # check output for infinite values
+        print(
+            "Before creating output:",
+            "shower_id=", shower.shower_id,
+            "bad x=", np.sum(~np.isfinite(x_out)),
+            "bad y=", np.sum(~np.isfinite(y_out)),
+            "bad z=", np.sum(~np.isfinite(z_out)),
+        )
 
         out = Shower(
             shower_id=shower.shower_id,
