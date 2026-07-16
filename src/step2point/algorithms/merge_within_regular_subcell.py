@@ -72,17 +72,16 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
             if position_mode is _MISSING:
                 position_mode = ["weighted"] * n_collections
             for idx, collection in enumerate(collection_name):
+                x_bins_list = self._as_list(x_bins)
+                y_bins_list = self._as_list(y_bins)
+                position_mode_list = self._as_list(position_mode)
                 if any(
                     len(x) != len(collection_name)
-                    for x in [
-                        self._as_list(x_bins),
-                        self._as_list(y_bins),
-                        self._as_list(position_mode),
-                    ]
+                    for x in [x_bins_list, y_bins_list, position_mode_list]
                 ):
                     raise ValueError(
-                        "Arguments for lists x_bins, y_bins, position_mode, "
-                        "collection_name must be the same length."
+                        "Arguments for x_bins, y_bins, position_mode, "
+                        "and collection_name must have the same length."
                     )
                 if self._as_list(x_bins)[idx] <= 0 or self._as_list(y_bins)[idx] <= 0:
                     raise ValueError("x_bins and y_bins must be positive integers.")
@@ -185,14 +184,26 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
                 )
             subdetectors = np.asarray(subdetectors, dtype=np.int64)
             for coll_idx, collection in enumerate(self.collection_name):
+                if collection not in MAP:
+                    raise ValueError(
+                        f"Collection {collection} not found in metadata subdetectors {subdetector_names}"
+                    )
+
                 subdet_id = MAP[collection]
+
+                # global indices of hits belonging to this collection
                 collection_mask = subdetectors == subdet_id
+                global_indices = np.where(collection_mask & (~processed))[0]
+
+                if len(global_indices) == 0:
+                    continue
+
                 decoded = [
                     decode_dd4hep_cell_id(
-                        int(cell_id),
+                        int(shower.cell_id[index]),
                         self.layout[coll_idx].cell_id_encoding,
                     )
-                    for cell_id in shower.cell_id[collection_mask]
+                    for index in global_indices
                 ]
                 systems = np.asarray([item["system"] for item in decoded], dtype=np.int32)
                 modules = np.asarray([item["module"] for item in decoded], dtype=np.int32)
@@ -200,16 +211,25 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
                 cell_x = np.asarray([item["x"] for item in decoded], dtype=np.int32)
                 cell_y = np.asarray([item["y"] for item in decoded], dtype=np.int32)
 
-                ### mask out any cellids that don't belong to the detector corresponding to this collection
-                system_mask = collection_mask & (~processed)
-
-                if not np.any(system_mask):
-                    # skip the empty collection
-                    continue
-
-                unique_ml = np.unique(np.stack([systems[system_mask], modules[system_mask], layers[system_mask]], axis=1), axis=0)
+                unique_ml = np.unique(
+                    np.stack(
+                        [
+                            systems,
+                            modules,
+                            layers,
+                        ],
+                        axis=1,
+                    ),
+                    axis=0,
+                )
                 for system_index, module_index, layer_index in unique_ml:
-                    mask = system_mask & (modules == module_index) & (layers == layer_index)           
+                    local_mask = (
+                        (systems == system_index)
+                        & (modules == module_index)
+                        & (layers == layer_index)
+                    )
+                    mask = np.zeros(n_points, dtype=bool)
+                    mask[global_indices[local_mask]] = True       
                     layer = self.layout[coll_idx].layers[layer_index - 1]
                     sensitive_center_xy = barrel_sensitive_plane_center_xy(
                         self.layout[coll_idx],
@@ -221,8 +241,8 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
                     tangent_local = (xy[mask] - sensitive_center_xy) @ tangent
                     long_local = shower.z[mask].astype(np.float64)
 
-                    parent_tangent = cell_x[mask].astype(np.float64) * layer.pitch_tangent_mm
-                    parent_long = cell_y[mask].astype(np.float64) * layer.pitch_z_mm
+                    parent_tangent = cell_x[local_mask].astype(np.float64) * layer.pitch_tangent_mm
+                    parent_long = cell_y[local_mask].astype(np.float64) * layer.pitch_z_mm
 
                     sub_x_mask = _subcell_indices(
                         tangent_local - parent_tangent,
@@ -237,8 +257,8 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
                     sub_x[mask] = sub_x_mask
                     sub_y[mask] = sub_y_mask
 
-                    sub_tangent_center = _subcell_center(cell_x[mask], sub_x_mask, layer.pitch_tangent_mm, self.x_bins[coll_idx])
-                    sub_long_center = _subcell_center(cell_y[mask], sub_y_mask, layer.pitch_z_mm, self.y_bins[coll_idx])
+                    sub_tangent_center = _subcell_center(cell_x[local_mask], sub_x_mask, layer.pitch_tangent_mm, self.x_bins[coll_idx])
+                    sub_long_center = _subcell_center(cell_y[local_mask], sub_y_mask, layer.pitch_z_mm, self.y_bins[coll_idx])
 
                     center_xy_mask = sensitive_center_xy + sub_tangent_center[:, None] * tangent[None, :]
                     center_x[mask] = center_xy_mask[:, 0]
