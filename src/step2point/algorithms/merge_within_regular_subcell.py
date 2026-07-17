@@ -269,8 +269,29 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
         if not np.all(processed):
             unmatched = np.where(~processed)[0]
 
-            print("unmatched indices:", unmatched)
-            print("unmatched x:", shower.x[unmatched])
+            print("unmatched subdetector:",
+                shower.metadata["subdetector"][unmatched])
+
+            print("unmatched cell_id:",
+                shower.cell_id[unmatched])
+
+            for i, item in zip(global_indices, decoded):
+                if i in unmatched:
+                    print(
+                        "UNMATCHED DECODE",
+                        i,
+                        item
+                    )
+            
+            print("not processed decoded:")
+            for idx in unmatched:
+                print(
+                    idx,
+                    decode_dd4hep_cell_id(
+                        int(shower.cell_id[idx]),
+                        self.layout[0].cell_id_encoding
+                    )
+                )
 
             print(
                 f"Warning: {len(unmatched)} hits were not geometrically processed. "
@@ -302,10 +323,6 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
             z_out = np.bincount(inverse, weights=shower.z * shower.E, minlength=n_out) / safe_e
         else:
             first_indices = np.full(n_out, -1, dtype=np.int32)
-
-            print("first indices:", first_indices)
-            print("first centers:", center_x[first_indices])
-            
             for point_index, group_index in enumerate(inverse):
                 if first_indices[group_index] < 0:
                     first_indices[group_index] = point_index
