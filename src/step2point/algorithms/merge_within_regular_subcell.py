@@ -171,6 +171,7 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
         center_y = np.full(n_points, np.nan, dtype=np.float64)
         center_z = np.full(n_points, np.nan, dtype=np.float64)
         processed = np.zeros(n_points, dtype=bool)  # check if all points are processed
+        selected = np.zeros(n_points, dtype=bool)
 
         xy = np.stack([shower.x, shower.y], axis=1).astype(np.float64)
 
@@ -196,12 +197,6 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
             global_indices = np.where(
                 collection_mask & (~processed)
             )[0]
-
-            # subdet_id = MAP[collection]
-            
-            # # global indices of hits belonging to this collection
-            # collection_mask = subdetectors == subdet_id
-            # global_indices = np.where(collection_mask & (~processed))[0]
 
             if len(global_indices) == 0:
                 continue
@@ -274,39 +269,32 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
                 center_z[mask] = sub_long_center
                 processed[mask] = True
         
-        # check if all cells are processed- if not raise the error message with the number of unprocessed hits and continue
-        unmatched = np.where(selected & (~processed))[0]
-
-        if len(unmatched) > 0:
+        # process the unselected hits (not belonging to any of the collections)
+        if np.any(~selected):
             print(
-                f"Warning: {len(unmatched)} selected hits were not geometrically processed. "
+                f"Warning: {len(~selected)} selected hits were not geometrically processed. "
                 "Keeping their original positions."
             )
-            center_x[unmatched] = shower.x[unmatched]
-            center_y[unmatched] = shower.y[unmatched]
-            center_z[unmatched] = shower.z[unmatched]
+            center_x[~selected] = shower.x[~selected]
+            center_y[~selected] = shower.y[~selected]
+            center_z[~selected] = shower.z[~selected]
 
-            processed[unmatched] = True
-        
-        sub_x[~selected] = -1
-        sub_y[~selected] = -1
+            processed[~selected] = True
 
-        key_dtype = np.dtype([("cell_id", np.uint64), ("sub_x", np.int32), ("sub_y", np.int32)])
+        key_dtype = np.dtype([("cell_id", np.uint64), ("sub_x", np.int32), ("sub_y", np.int32), ("unique_id", np.int64)])
         keys = np.empty(n_points, dtype=key_dtype)
         keys["cell_id"] = shower.cell_id
         keys["sub_x"] = sub_x
         keys["sub_y"] = sub_y
+        keys["unique_id"] = 0
 
         # make unselected hits unique
-        keys["cell_id"][~selected] = (
-            shower.cell_id[~selected]
-            | (np.uint64(1) << np.uint64(63))
-        )
-        keys["sub_x"][~selected] = np.arange(
-            np.sum(~selected),
-            dtype=np.int32,
-        )
+        keys["sub_x"][~selected] = -1
         keys["sub_y"][~selected] = -1
+        keys["unique_id"][~selected] = np.arange(
+            np.sum(~selected),
+            dtype=np.int64,
+        )
         unique_keys, inverse = np.unique(keys, return_inverse=True)
 
             # sub_x[~selected] = -1
