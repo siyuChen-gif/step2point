@@ -297,22 +297,9 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
         )
         unique_keys, inverse = np.unique(keys, return_inverse=True)
 
-            # sub_x[~selected] = -1
-            # sub_y[~selected] = -1
 
-            # center_x[unmatched] = shower.x[unmatched]
-            # center_y[unmatched] = shower.y[unmatched]
-            # center_z[unmatched] = shower.z[unmatched]
-
-            # processed[unmatched] = True
-        
-        # key_dtype = np.dtype([("cell_id", np.uint64), ("sub_x", np.int32), ("sub_y", np.int32)])
-        # keys = np.empty(n_points, dtype=key_dtype)
-        # keys["cell_id"] = shower.cell_id
-        # keys["sub_x"] = sub_x
-        # keys["sub_y"] = sub_y
-        # unique_keys, inverse = np.unique(keys, return_inverse=True)
-
+        ############################################################
+        # print out checks for merges ##############################
         subdetector_names = shower.metadata["subdetector_names"]
 
         for subdet_id in np.unique(subdetectors):
@@ -326,7 +313,10 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
                 "after:",
                 len(output_groups),
             )
+        ############################################################
+        ############################################################
             
+
         n_out = len(unique_keys)
 
         e_sum = np.bincount(inverse, weights=shower.E, minlength=n_out)
