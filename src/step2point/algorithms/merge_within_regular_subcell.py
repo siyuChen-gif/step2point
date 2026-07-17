@@ -174,7 +174,6 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
 
         xy = np.stack([shower.x, shower.y], axis=1).astype(np.float64)
 
-        # if len(self.layout) > 1:
         subdetector_names = shower.metadata.get("subdetector_names", [])
         MAP = {name: isub for isub, name in enumerate(subdetector_names)}
         subdetectors = shower.metadata.get("subdetector")
@@ -265,54 +264,13 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
                 center_y[mask] = center_xy_mask[:, 1]
                 center_z[mask] = sub_long_center
                 processed[mask] = True
-        # else:
-        #     decoded = [
-        #         decode_dd4hep_cell_id(int(cell_id), 
-        #         self.layout[0].cell_id_encoding
-        #         ) for cell_id in shower.cell_id
-        #     ]
-        #     modules = np.asarray([item["module"] for item in decoded], dtype=np.int32)
-        #     layers = np.asarray([item["layer"] for item in decoded], dtype=np.int32)
-        #     cell_x = np.asarray([item["x"] for item in decoded], dtype=np.int32)
-        #     cell_y = np.asarray([item["y"] for item in decoded], dtype=np.int32)
-        #     unique_ml = np.unique(np.stack([modules, layers], axis=1), axis=0)
-        #     for module_index, layer_index in unique_ml:
-        #         mask = (modules == module_index) & (layers == layer_index)
-        #         layer = self.layout[0].layers[layer_index - 1]
-        #         sensitive_center_xy = barrel_sensitive_plane_center_xy(self.layout[0], int(layer_index), int(module_index))
-        #         _, _, tangent = barrel_module_basis(self.layout[0], int(layer_index), int(module_index))
-
-        #         tangent_local = (xy[mask] - sensitive_center_xy) @ tangent
-        #         long_local = shower.z[mask].astype(np.float64)
-
-        #         parent_tangent = cell_x[mask].astype(np.float64) * layer.pitch_tangent_mm
-        #         parent_long = cell_y[mask].astype(np.float64) * layer.pitch_z_mm
-
-        #         sub_x_mask = _subcell_indices(
-        #             tangent_local - parent_tangent,
-        #             layer.pitch_tangent_mm,
-        #             self.x_bins[0],
-        #         )
-        #         sub_y_mask = _subcell_indices(
-        #             long_local - parent_long,
-        #             layer.pitch_z_mm,
-        #             self.y_bins[0],
-        #         )
-        #         sub_x[mask] = sub_x_mask
-        #         sub_y[mask] = sub_y_mask
-
-        #         sub_tangent_center = _subcell_center(cell_x[mask], sub_x_mask, layer.pitch_tangent_mm, self.x_bins[0])
-        #         sub_long_center = _subcell_center(cell_y[mask], sub_y_mask, layer.pitch_z_mm, self.y_bins[0])
-
-        #         center_xy_mask = sensitive_center_xy + sub_tangent_center[:, None] * tangent[None, :]
-        #         center_x[mask] = center_xy_mask[:, 0]
-        #         center_y[mask] = center_xy_mask[:, 1]
-        #         center_z[mask] = sub_long_center
-        #         processed[mask] = True
         
         # check if all cells are processed- if not raise the error message with the number of unprocessed hits and continue
         if not np.all(processed):
             unmatched = np.where(~processed)[0]
+
+            print("unmatched indices:", unmatched)
+            print("unmatched x:", shower.x[unmatched])
 
             print(
                 f"Warning: {len(unmatched)} hits were not geometrically processed. "
@@ -344,6 +302,10 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
             z_out = np.bincount(inverse, weights=shower.z * shower.E, minlength=n_out) / safe_e
         else:
             first_indices = np.full(n_out, -1, dtype=np.int32)
+
+            print("first indices:", first_indices)
+            print("first centers:", center_x[first_indices])
+            
             for point_index, group_index in enumerate(inverse):
                 if first_indices[group_index] < 0:
                     first_indices[group_index] = point_index
