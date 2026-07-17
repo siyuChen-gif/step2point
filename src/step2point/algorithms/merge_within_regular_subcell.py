@@ -269,30 +269,6 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
         if not np.all(processed):
             unmatched = np.where(~processed)[0]
 
-            print("unmatched subdetector:",
-                shower.metadata["subdetector"][unmatched])
-
-            print("unmatched cell_id:",
-                shower.cell_id[unmatched])
-
-            for i, item in zip(global_indices, decoded):
-                if i in unmatched:
-                    print(
-                        "UNMATCHED DECODE",
-                        i,
-                        item
-                    )
-            
-            print("not processed decoded:")
-            for idx in unmatched:
-                print(
-                    idx,
-                    decode_dd4hep_cell_id(
-                        int(shower.cell_id[idx]),
-                        self.layout[0].cell_id_encoding
-                    )
-                )
-
             print(
                 f"Warning: {len(unmatched)} hits were not geometrically processed. "
                 "Keeping their original positions."
@@ -313,6 +289,22 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
         keys["sub_x"] = sub_x
         keys["sub_y"] = sub_y
         unique_keys, inverse = np.unique(keys, return_inverse=True)
+
+
+        subdetector_names = shower.metadata["subdetector_names"]
+
+        for subdet_id in np.unique(subdetectors):
+            hit_mask = subdetectors == subdet_id
+            output_groups = np.unique(inverse[hit_mask])
+
+            print(
+                subdetector_names[subdet_id],
+                "before:",
+                np.sum(hit_mask),
+                "after:",
+                len(output_groups),
+            )
+            
         n_out = len(unique_keys)
 
         e_sum = np.bincount(inverse, weights=shower.E, minlength=n_out)
