@@ -281,20 +281,33 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
 
             processed[~selected] = True
 
-        key_dtype = np.dtype([("cell_id", np.uint64), ("sub_x", np.int32), ("sub_y", np.int32), ("unique_id", np.int64)])
+        key_dtype = np.dtype(
+            [
+                ("subdetector", np.int32),
+                ("cell_id", np.uint64),
+                ("sub_x", np.int32),
+                ("sub_y", np.int32),
+                ("unique_id", np.int64),
+            ]
+        )
+
         keys = np.empty(n_points, dtype=key_dtype)
+        keys["subdetector"] = subdetectors
         keys["cell_id"] = shower.cell_id
         keys["sub_x"] = sub_x
         keys["sub_y"] = sub_y
         keys["unique_id"] = 0
 
-        # make unselected hits unique
-        keys["sub_x"][~selected] = -1
-        keys["sub_y"][~selected] = -1
-        keys["unique_id"][~selected] = np.arange(
-            np.sum(~selected),
+        # Keep unselected hits unique so they are not merged.
+        unselected_indices = np.where(~selected)[0]
+
+        keys["sub_x"][unselected_indices] = -1
+        keys["sub_y"][unselected_indices] = -1
+        keys["unique_id"][unselected_indices] = np.arange(
+            len(unselected_indices),
             dtype=np.int64,
         )
+
         unique_keys, inverse = np.unique(keys, return_inverse=True)
 
 
@@ -319,20 +332,54 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
 
         n_out = len(unique_keys)
 
-        e_sum = np.bincount(inverse, weights=shower.E, minlength=n_out)
+        e_sum = np.bincount(
+            inverse,
+            weights=shower.E,
+            minlength=n_out,
+        )
         safe_e = np.where(e_sum > 0.0, e_sum, 1.0)
+        first_indices = np.full(n_out, -1, dtype=np.int64)
+
+        for point_index, group_index in enumerate(inverse):
+            if first_indices[group_index] < 0:
+                first_indices[group_index] = point_index
+
+        if np.any(first_indices < 0):
+            raise RuntimeError(
+                "At least one output group has no corresponding input point."
+            )
+
         if self.position_mode[0] == "weighted":
-            x_out = np.bincount(inverse, weights=shower.x * shower.E, minlength=n_out) / safe_e
-            y_out = np.bincount(inverse, weights=shower.y * shower.E, minlength=n_out) / safe_e
-            z_out = np.bincount(inverse, weights=shower.z * shower.E, minlength=n_out) / safe_e
+            x_out = (
+                np.bincount(
+                    inverse,
+                    weights=shower.x * shower.E,
+                    minlength=n_out,
+                )
+                / safe_e
+            )
+            y_out = (
+                np.bincount(
+                    inverse,
+                    weights=shower.y * shower.E,
+                    minlength=n_out,
+                )
+                / safe_e
+            )
+            z_out = (
+                np.bincount(
+                    inverse,
+                    weights=shower.z * shower.E,
+                    minlength=n_out,
+                )
+                / safe_e
+            )
         else:
-            first_indices = np.full(n_out, -1, dtype=np.int32)
-            for point_index, group_index in enumerate(inverse):
-                if first_indices[group_index] < 0:
-                    first_indices[group_index] = point_index
             x_out = center_x[first_indices]
             y_out = center_y[first_indices]
             z_out = center_z[first_indices]
+
+        subdetector_out = subdetectors[first_indices]
 
         t_out = None
         if shower.t is not None:
@@ -349,11 +396,22 @@ class MergeWithinRegularSubcell(CompressionAlgorithm):
             primary=shower.primary,
             metadata={
                 **shower.metadata,
+                "subdetector": subdetector_out.astype(
+                    np.int32,
+                    copy=False,
+                ),
                 "algorithm": self.name,
-                "position_mode": self._maybe_single(self.position_mode),
+                "position_mode": self._maybe_single(
+                    self.position_mode
+                ),
                 "x_bins": self._maybe_single(self.x_bins),
                 "y_bins": self._maybe_single(self.y_bins),
-                "collection_name": self._maybe_single([layout.collection_name for layout in self.layout]),
+                "collection_name": self._maybe_single(
+                    [
+                        layout.collection_name
+                        for layout in self.layout
+                    ]
+                )
             },
         )
         return CompressionResult(
